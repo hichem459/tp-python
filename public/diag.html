@@ -1,0 +1,13 @@
+<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Diagnostic Python</title>
+<style>body{font:15px system-ui;max-width:760px;margin:24px auto;padding:0 16px}li{margin:4px 0}.ok{color:#0a7a2f}.ko{color:#c0172b;font-weight:700}code{background:#eee;padding:1px 4px}</style>
+<h1>Diagnostic du moteur Python</h1><p>Ouvrez cette page sur le site (même dossier que index.html) et envoyez-moi une capture d'écran du résultat.</p><ol id="o"></ol><pre id="r"></pre>
+<script>
+const o=document.getElementById('o'),add=(t,ok)=>{const l=document.createElement('li');l.className=ok?'ok':'ko';l.textContent=(ok?'OK  ':'ERREUR  ')+t;o.append(l)};
+(async()=>{
+ add('Adresse : '+location.href+(location.protocol==='file:'?'  (ouvrir via http/https, pas depuis le disque !)':''),location.protocol!=='file:');
+ const files=['index.html','api.php?i=1&action=ping','api.php?i=1&action=pub','logo.png','bg.jpg'];
+ for(const f of files){try{const r=await fetch(f,{cache:'no-store'});const b=await r.arrayBuffer();add(f+' : HTTP '+r.status+', '+b.byteLength+' octets, '+(r.headers.get('content-type')||'?'),r.ok&&b.byteLength>0)}catch(e){add(f+' : '+e.message,false)}}
+ try{const w=new Worker('py-worker.js');add('Worker créé',true);w.terminate()}catch(e){add('Worker : '+e.message,false)}
+ try{const w=new Worker(URL.createObjectURL(new Blob([await (await fetch('index.html')).text().then(t=>{const m=/id="pyworker">([\s\S]*?)<\/script>/.exec(t);return m?m[1].replace(/<\\\//g,'<\/'):''})],{type:'text/javascript'})));w.onmessage=e=>{if(e.data.type==='ready')add('Python démarré : '+e.data.python,true);if(e.data.type==='fatal')add('Python : '+e.data.message,false)};w.onerror=e=>add('Erreur worker : '+e.message,false);w.postMessage({type:'init',base:new URL('py/',location.href).href})}catch(e){add(e.message,false)}
+})();
+</script>

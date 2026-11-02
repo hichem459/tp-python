@@ -1,0 +1,26 @@
+[build]
+  publish = "public"
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+
+# Les anciennes URL « api.php?action=… » du site sont servies par la fonction Netlify.
+[[redirects]]
+  from = "/api.php"
+  to = "/.netlify/functions/api"
+  status = 200
+  force = true
+
+# Pas de cache pour les pages : les étudiants voient toujours la dernière version.
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "no-cache, must-revalidate"
+    Content-Type = "text/html; charset=UTF-8"
+
+[[headers]]
+  for = "/"
+  [headers.values]
+    Cache-Control = "no-cache, must-revalidate"
+    Content-Type = "text/html; charset=UTF-8"

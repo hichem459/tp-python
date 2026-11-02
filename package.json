@@ -1,0 +1,10 @@
+{
+  "name": "tp-python-netlify",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Site TP Python - version Netlify (fonction api + stockage Netlify Blobs)",
+  "dependencies": {
+    "@netlify/blobs": ">=8.1.0"
+  }
+}

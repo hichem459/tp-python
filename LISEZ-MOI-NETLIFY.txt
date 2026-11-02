@@ -1,0 +1,43 @@
+SITE TP PYTHON - VERSION NETLIFY
+================================
+
+Pourquoi : sur InfinityFree, les centaines de requêtes de suivi (battements des étudiants, tableau de bord) dépassaient la limite de « hits ».
+Ici, api.php (PHP) est remplacé par une fonction Netlify (netlify/functions/api.mjs) avec stockage Netlify Blobs. Aucun serveur ni base à gérer.
+Le site garde les mêmes adresses internes (api.php?action=...) : l'interface n'a presque pas changé.
+
+CONTENU
+  public/                  le site (index.html, diag.html, migrer.html, images)
+  netlify/functions/api.mjs  le serveur (port complet de api.php)
+  netlify.toml, package.json
+  ../donnees-migration.json  VOS DONNEES (fourni à part, PRIVE : ne jamais le mettre dans le dépôt ni dans public/)
+
+DEPLOIEMENT (méthode recommandée : GitHub, car Netlify installe alors @netlify/blobs tout seul)
+ 1. Créez un dépôt GitHub PRIVE et envoyez-y le contenu de ce dossier (sans donnees-migration.json ; le .gitignore s'en charge).
+ 2. Sur app.netlify.com : « Add new site » > « Import an existing project » > choisissez le dépôt. Réglages détectés via netlify.toml
+    (publish = public, functions = netlify/functions). Aucune commande de build nécessaire. « Deploy ».
+    Variante sans GitHub : installez Node + Netlify CLI, puis dans ce dossier :  npm install  puis  netlify deploy --prod
+    (le simple glisser-déposer du dossier dans Netlify n'installe pas les dépendances de la fonction : à éviter).
+ 3. Vérifiez : https://VOTRE-SITE.netlify.app/diag.html -> tout « OK » (dont api.php).
+
+MIGRATION DE VOS DONNEES (une seule fois)
+ 4. Ouvrez https://VOTRE-SITE.netlify.app/migrer.html, saisissez votre mot de passe administrateur (le même qu'avant), choisissez
+    donnees-migration.json, « Importer ». Sont repris : étudiants et mots de passe, réglages, présence, séances, contenu des TP modifié,
+    rapports et avancement, 367 photos, document du cours, évaluations, journaux.
+ 5. Ouvrez la page d'accueil > « Espace administrateur » : tableau de bord complet.
+ 6. ENSEIGNANTS DELEGUES : leurs mots de passe (bcrypt PHP) ne sont pas transférables. Onglet « Enseignants » > « Modifier le mot de passe »
+    pour chacun (3 comptes), puis communiquez-leur le nouveau. Les groupes attribués sont conservés.
+ 7. Retirez migrer.html (supprimez-le du dépôt et redéployez) une fois la migration terminée.
+
+CHANGEMENTS PAR RAPPORT A LA VERSION INFINITYFREE
+ - Battement de présence des étudiants : toutes les 15 s (6 s avant) ; tableaux de bord enseignant/admin : 10 s (5 s avant) ; « en ligne » = vu il y a moins de 60 s.
+   Un chrono ou une séance lancés par l'enseignant arrivent chez les étudiants en moins de 15 s (le chrono lui-même reste exact : il utilise l'heure du serveur).
+ - Fichiers déposés (documents du cours, base de données) : 5 Mo maximum par fichier (limite des fonctions Netlify, 6 Mo par requête).
+ - Pas de dossier api_private/ ni de data/pub.json public : tout est dans Netlify Blobs (privé). Sauvegarde : « Exporter toute la base (JSON) » dans l'espace administrateur.
+ - Python (Pyodide) reste chargé depuis le CDN officiel, comme avant : internet requis pour les étudiants.
+
+QUOTAS NETLIFY (formule gratuite)
+ Le plan gratuit actuel est basé sur des « crédits » mensuels (300 par mois d'après les sources consultées, à confirmer dans votre tableau de bord) ;
+ une fois épuisés, le site est mis en pause jusqu'au mois suivant. La charge vient surtout des battements : ~4 appels/minute/étudiant connecté.
+ Surveillez « Usage » dans Netlify après les premières séances ; si besoin, passez les battements à 20-30 s (index.html, recherche « liveBeat(false, true); }, 15000 »).
+
+MISE A JOUR DU SITE : modifiez les fichiers du dépôt ; Netlify redéploie. Les données (Blobs) ne sont pas touchées par un redéploiement.
