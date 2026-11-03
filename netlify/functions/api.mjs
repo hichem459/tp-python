@@ -6,7 +6,7 @@ import { createHash, randomBytes, scryptSync, pbkdf2Sync, timingSafeEqual } from
 
 export const config = { path: '/api.php' };
 
-const store = getStore({ name: 'tppython', consistency: 'strong' });
+let store = null;   // recréé à chaque requête : le jeton Netlify Blobs expire sur une instance qui reste active
 const MAXBIN = 5 * 1024 * 1024;   // limite Netlify Functions : ~6 Mo par requête
 
 /* ---------- utilitaires ---------- */
@@ -633,6 +633,7 @@ async function handle() {
 /* ---------- point d'entrée ---------- */
 export default async (req, context) => {
   const url = new URL(req.url); const buf = Buffer.from(await req.arrayBuffer());
+  store = getStore({ name: 'tppython', consistency: 'strong' });
   REQ = { req, ctx: context, url, buf, raw: buf.toString('utf8') }; LOCKED = false;
   try {
     const r = await handle();
